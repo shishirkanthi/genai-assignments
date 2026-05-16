@@ -391,6 +391,7 @@ class ChatUI {
                 });
 
                 const finalPrompt = builtPrompt + " Additional Instructions: " + userMsg;
+                console.log('Final prompt for model:', finalPrompt, this.selectedModel);
                 const resp = await apiRef.sendMessage(finalPrompt, this.selectedModel);
                 const returned = resp?.content || resp;
                 combinedContent += returned.trim() + '\n\n';

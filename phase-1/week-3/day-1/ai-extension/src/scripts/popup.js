@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       groq: [
         { value: 'deepseek-r1-distill-llama-70b', label: 'deepseek-r1-distill-llama-70b' },
         { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-
+        {value: 'openai/gpt-oss-20b', label: 'gpt-oss-20b'}
       ],
       openai: [
         { value: 'gpt-4o', label: 'GPT-4o' },

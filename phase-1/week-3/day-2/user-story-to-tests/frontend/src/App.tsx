@@ -91,6 +91,59 @@ function App() {
     ].join('\n')
   }
 
+  const handleCopyFeatureFile = async () => {
+    const featureText = buildFeatureFile(results)
+    if (!featureText) {
+      window.alert('No feature file content to copy.')
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(featureText)
+      window.alert('Feature file copied to clipboard.')
+    } catch (error) {
+      console.error('Failed to copy feature file:', error)
+      window.alert('Unable to copy to clipboard. Please try again.')
+    }
+  }
+
+  const renderFeatureFile = () => {
+    const content = buildFeatureFile(results)
+    if (!content) {
+      return null
+    }
+
+    const lines = content.split('\n')
+    return (
+      <div className="feature-file">
+        {lines.map((line, index) => {
+          const trimmed = line.trim()
+          const keywordMatch = trimmed.match(/^(Feature|Scenario|Given|When|Then|And)\b(.*)$/)
+
+          if (keywordMatch) {
+            const keyword = keywordMatch[1]
+            const rest = keywordMatch[2]
+            const keywordClass = keyword === 'Feature' ? 'gherkin-keyword feature' : 'gherkin-keyword'
+
+            return (
+              <div key={`${keyword}-${index}`} className="gherkin-line">
+                <span className={keywordClass}>{keyword}</span>
+                <span className="gherkin-colon">{line.includes(':') ? ':' : ''}</span>
+                <span className="gherkin-text">{rest}</span>
+              </div>
+            )
+          }
+
+          return (
+            <div key={`line-${index}`} className="gherkin-line">
+              {line || ' '}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   const handleJiraConnect = async () => {
     const response = await connectJira({
       baseUrl: jiraBaseUrl,
@@ -153,6 +206,8 @@ function App() {
       return
     }
 
+    const storyData = response.data
+
     const hasExistingData = Boolean(
       formData.storyTitle.trim() ||
       formData.description?.trim() ||
@@ -168,9 +223,9 @@ function App() {
 
     setFormData(prev => ({
       ...prev,
-      storyTitle: response.data.storyTitle || '',
-      description: response.data.description || '',
-      acceptanceCriteria: response.data.acceptanceCriteria || ''
+      storyTitle: storyData.storyTitle || '',
+      description: storyData.description || '',
+      acceptanceCriteria: storyData.acceptanceCriteria || ''
     }))
   }
 
@@ -458,14 +513,43 @@ function App() {
         }
 
         .feature-file {
-          background: #0b1020;
-          color: #e8edf4;
+          background: var(--vscode-editor-background, #0b1020);
+          color: var(--vscode-editor-foreground, #e8edf4);
           padding: 20px;
           border-radius: 8px;
+          border: 1px solid var(--vscode-editorWidget-border, #1f2a44);
           font-family: 'Courier New', Courier, monospace;
           font-size: 13px;
           white-space: pre-wrap;
           line-height: 1.6;
+        }
+
+        .gherkin-line {
+          white-space: pre-wrap;
+        }
+
+        .gherkin-keyword {
+          color: var(--vscode-foreground, #4fc1ff);
+          font-weight: 600;
+        }
+
+        .gherkin-keyword.feature {
+          color: var(--vscode-symbolIcon-classForeground, #d7ba7d);
+        }
+
+        .gherkin-colon {
+          color: var(--vscode-foreground, #4fc1ff);
+        }
+
+        .gherkin-text {
+          color: var(--vscode-editor-foreground, #e8edf4);
+          margin-left: 6px;
+        }
+
+        .feature-toolbar {
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 10px;
         }
         
         .category-positive { color: #27ae60; font-weight: 600; }
@@ -712,17 +796,6 @@ function App() {
             </div>
           )}
 
-          <label className="feature-toggle">
-            <input
-              type="checkbox"
-              checked={includeFeatureFile}
-              onChange={(e) => {
-                setIncludeFeatureFile(e.target.checked)
-                setActiveResultsTab('cases')
-              }}
-            />
-            Also generate Gherkin feature file
-          </label>
           <div className="form-group">
             <label htmlFor="storyTitle" className="form-label">
               Story Title *
@@ -778,13 +851,26 @@ function App() {
             />
           </div>
           
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Generating...' : 'Generate'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Generating...' : 'Generate'}
+            </button>
+            <label className="feature-toggle" style={{ margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={includeFeatureFile}
+                onChange={(e) => {
+                  setIncludeFeatureFile(e.target.checked)
+                  setActiveResultsTab('cases')
+                }}
+              />
+              Generate feature file
+            </label>
+          </div>
         </form>
 
         {error && (
@@ -898,7 +984,18 @@ function App() {
             )}
 
             {includeFeatureFile && activeResultsTab === 'feature' && (
-              <div className="feature-file">{buildFeatureFile(results)}</div>
+              <>
+                <div className="feature-toolbar">
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={handleCopyFeatureFile}
+                  >
+                    Copy
+                  </button>
+                </div>
+                {renderFeatureFile()}
+              </>
             )}
           </div>
         )}

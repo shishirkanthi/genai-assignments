@@ -382,6 +382,273 @@ export const DEFAULT_PROMPTS = {
 
     Tone:
     - Professional, executable, structured.
+  `,
+
+  /**
+   * Test Data Generation using Boundary Value Analysis and Equivalent Partitioning
+   */
+  TEST_DATA_GENERATION: `
+    Instructions:
+    - Generate test data sets for the provided DOM elements.
+    - MUST generate between 3 to 5 test data sets.
+    - Use Boundary Value Analysis (BVA) and Equivalent Partitioning (EP) techniques.
+    - For text inputs: consider min length, max length, empty, special characters, valid/invalid formats.
+    - For numeric inputs: consider min value, max value, zero, negative, positive, boundary values.
+    - For dropdowns/select: include valid options from DOM, first option, last option, middle option.
+    - For email fields: valid email, invalid format, missing @, missing domain.
+    - For phone numbers: valid format, too short, too long, special characters.
+    - For dates: past dates, future dates, current date, invalid formats.
+    - For required fields: empty values (negative test), valid values (positive test).
+    - Consider the additional instructions provided by the user.
+    - Use South India realistic data (names like Rajesh, Priya, Lakshmi; cities like Chennai, Bangalore, Hyderabad; pin codes like 600001, 560001).
+
+    Context:
+    DOM:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    Additional Instructions:
+    \${userAction}
+
+    Output Format:
+    - Generate test data in a structured table format using markdown.
+    - Include a "Test Case Type" column indicating BVA/EP category.
+    - Include a "Expected Result" column (Pass/Fail).
+
+    Example:
+    \`\`\`markdown
+    ## Test Data Sets
+
+    ### Test Data Set 1: Valid Data (Positive - Equivalent Partition)
+    | Field Name | Value | Test Case Type | Expected Result |
+    |------------|-------|----------------|------------------|
+    | Username   | rajesh.kumar@example.com | Valid Email - EP | Pass |
+    | Password   | SecurePass123! | Valid Password - EP | Pass |
+    | First Name | Rajesh | Valid Name - EP | Pass |
+    | Age        | 25 | Valid Age - EP | Pass |
+    | City       | Chennai | Valid Option - EP | Pass |
+
+    ### Test Data Set 2: Boundary Value - Minimum (BVA)
+    | Field Name | Value | Test Case Type | Expected Result |
+    |------------|-------|----------------|------------------|
+    | Username   | a@b.c | Min Length Email - BVA | Pass |
+    | Password   | Pass1! | Min Length Password - BVA | Pass |
+    | First Name | A | Min Length Name - BVA | Pass |
+    | Age        | 18 | Minimum Age - BVA | Pass |
+    | City       | Bangalore | First Option - BVA | Pass |
+
+    ### Test Data Set 3: Boundary Value - Maximum (BVA)
+    | Field Name | Value | Test Case Type | Expected Result |
+    |------------|-------|----------------|------------------|
+    | Username   | very.long.email.address@example.domain.com | Max Length Email - BVA | Pass |
+    | Password   | VeryLongPassword123!@#$ | Max Length Password - BVA | Pass |
+    | First Name | Thiruvananthapuram | Max Length Name - BVA | Pass |
+    | Age        | 65 | Maximum Age - BVA | Pass |
+    | City       | Hyderabad | Last Option - BVA | Pass |
+
+    ### Test Data Set 4: Invalid Data - Negative Test (EP)
+    | Field Name | Value | Test Case Type | Expected Result |
+    |------------|-------|----------------|------------------|
+    | Username   | invalid-email | Invalid Email Format - EP | Fail |
+    | Password   | weak | Too Short Password - EP | Fail |
+    | First Name | (empty) | Empty Required Field - EP | Fail |
+    | Age        | -5 | Negative Age - BVA | Fail |
+    | City       | (empty) | Empty Selection - EP | Fail |
+
+    ### Test Data Set 5: Edge Cases (BVA)
+    | Field Name | Value | Test Case Type | Expected Result |
+    |------------|-------|----------------|------------------|
+    | Username   | user@domain | Missing TLD - BVA | Fail |
+    | Password   | NoSpecial123 | Missing Special Char - EP | Fail |
+    | First Name | 123Numbers | Invalid Characters - EP | Fail |
+    | Age        | 0 | Zero Age - BVA | Fail |
+    | City       | Invalid Option | Non-existent Option - EP | Fail |
+    \`\`\`
+
+    Persona:
+    - Audience: QA engineers and testers who need comprehensive test data coverage.
+
+    Tone:
+    - Systematic, thorough, testing-focused.
+  `,
+
+  /**
+   * Selenium Java Test Scripts using Page Objects
+   */
+  SELENIUM_JAVA_TEST_SCRIPTS: `
+    Instructions:
+    - Generate ONLY a Selenium Java Test Class that uses Page Objects.
+    - The test class MUST import and instantiate the page object class.
+    - Use TestNG annotations (@Test, @BeforeMethod, @AfterMethod).
+    - Include WebDriver initialization and cleanup.
+    - Tests should call methods from the Page Object class.
+    - Use crisp single-line comments only.
+    - Include assertions using TestNG Assert.
+    - Use South India realistic test data (names, addresses, pin codes).
+    - Do NOT include Page Object class code.
+
+    Context:
+    DOM:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+    URL: \${pageUrl}
+
+    Additional Instructions:
+    \${userAction}
+
+    Example:
+    \`\`\`java
+    package com.testleaf.tests;
+
+    import org.testng.annotations.*;
+    import org.testng.Assert;
+    import org.openqa.selenium.WebDriver;
+    import org.openqa.selenium.chrome.ChromeDriver;
+    import com.testleaf.pages.LoginPage;
+
+    public class LoginTest {
+        private WebDriver driver;
+        private LoginPage loginPage;
+
+        @BeforeMethod
+        public void setUp() {
+            driver = new ChromeDriver();
+            driver.manage().window().maximize();
+            loginPage = new LoginPage(driver);
+        }
+
+        @AfterMethod
+        public void tearDown() {
+            if (driver != null) driver.quit();
+        }
+
+        @Test
+        public void testValidLogin() {
+            // Navigate to login page
+            driver.get("\${pageUrl}");
+            
+            // Perform login using page object
+            loginPage.enterUsername("rajesh.kumar@example.com");
+            loginPage.enterPassword("SecurePass123!");
+            loginPage.clickLoginButton();
+            
+            // Verify successful login
+            Assert.assertTrue(loginPage.isLoginSuccessful(), "Login should be successful");
+        }
+
+        @Test
+        public void testInvalidLogin() {
+            // Navigate to login page
+            driver.get("\${pageUrl}");
+            
+            // Attempt login with invalid credentials
+            loginPage.enterUsername("invalid@example.com");
+            loginPage.enterPassword("wrongpass");
+            loginPage.clickLoginButton();
+            
+            // Verify error message is displayed
+            Assert.assertTrue(loginPage.isErrorDisplayed(), "Error message should be displayed");
+        }
+    }
+    \`\`\`
+
+    Persona:
+    - Audience: Automation engineers who need executable test scripts using POM.
+
+    Output Format:
+    - A single Java test class inside a \`\`\`java\`\`\` block.
+
+    Tone:
+    - Professional, executable, maintainable.
+  `,
+
+  /**
+   * Playwright TypeScript Test Scripts using Page Objects
+   */
+  PLAYWRIGHT_TS_TEST_SCRIPTS: `
+    Instructions:
+    - Generate ONLY a Playwright TypeScript Test file that uses Page Objects.
+    - The test file MUST import and instantiate the page object class.
+    - Use Playwright test syntax with test.describe and test().
+    - Include beforeEach and afterEach hooks for setup/cleanup.
+    - Tests should call methods from the Page Object class.
+    - Use crisp single-line comments only.
+    - Include assertions using expect() from Playwright.
+    - Use South India realistic test data (names, addresses, pin codes).
+    - Do NOT include Page Object class code.
+
+    Context:
+    DOM:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+    URL: \${pageUrl}
+
+    Additional Instructions:
+    \${userAction}
+
+    Example:
+    \`\`\`typescript
+    import { test, expect, Page, Browser, chromium } from '@playwright/test';
+    import { LoginPage } from '../pages/LoginPage';
+
+    test.describe('Login Tests', () => {
+      let browser: Browser;
+      let page: Page;
+      let loginPage: LoginPage;
+
+      test.beforeEach(async () => {
+        browser = await chromium.launch({ headless: false });
+        page = await browser.newPage();
+        loginPage = new LoginPage(page);
+        await page.goto('\${pageUrl}');
+      });
+
+      test.afterEach(async () => {
+        await page.close();
+        await browser.close();
+      });
+
+      test('should login successfully with valid credentials', async () => {
+        // Perform login using page object
+        await loginPage.enterUsername('rajesh.kumar@example.com');
+        await loginPage.enterPassword('SecurePass123!');
+        await loginPage.clickLoginButton();
+        
+        // Verify successful login
+        await expect(page.locator('.success-message')).toBeVisible();
+      });
+
+      test('should show error with invalid credentials', async () => {
+        // Attempt login with invalid credentials
+        await loginPage.enterUsername('invalid@example.com');
+        await loginPage.enterPassword('wrongpass');
+        await loginPage.clickLoginButton();
+        
+        // Verify error message is displayed
+        await expect(page.locator('.error-message')).toBeVisible();
+      });
+
+      test('should validate empty form submission', async () => {
+        // Submit empty form
+        await loginPage.clickLoginButton();
+        
+        // Verify validation errors
+        await expect(page.locator('.validation-error')).toBeVisible();
+      });
+    });
+    \`\`\`
+
+    Persona:
+    - Audience: Automation engineers who need executable Playwright test scripts using POM.
+
+    Output Format:
+    - A single TypeScript test file inside a \`\`\`typescript\`\`\` block.
+
+    Tone:
+    - Professional, executable, maintainable.
   `
 };
 
@@ -416,4 +683,7 @@ export const CODE_GENERATOR_TYPES = {
   PLAYWRIGHT_TS_PAGE_ONLY: 'Playwright-TypeScript-Page-Only',
   PLAYWRIGHT_TS_FEATURE_ONLY: 'Playwright-TypeScript-Feature-Only',
   PLAYWRIGHT_TS_COMBINED: 'Playwright-TypeScript-Combined',
+  TEST_DATA_GENERATION: 'Test-Data-Generation',
+  SELENIUM_JAVA_TEST_SCRIPTS: 'Selenium-Java-Test-Scripts',
+  PLAYWRIGHT_TS_TEST_SCRIPTS: 'Playwright-TypeScript-Test-Scripts',
 };

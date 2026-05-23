@@ -139,6 +139,18 @@ class ChatUI {
             this.runTestButton.addEventListener('click', () => this.runCucumberTest());
         }
 
+        // Auto-select Page Class checkbox when Test Scripts is checked
+        const testScriptsCheckbox = document.getElementById('javaGenModeTestScripts');
+        const pageClassCheckbox = document.getElementById('javaGenModePage');
+        
+        if (testScriptsCheckbox && pageClassCheckbox) {
+            testScriptsCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked && !pageClassCheckbox.checked) {
+                    pageClassCheckbox.checked = true;
+                }
+            });
+        }
+
     }
 
     // ===================
@@ -557,9 +569,11 @@ class ChatUI {
         // Extract selected generation modes
         const isFeatureChecked = checkboxes.some(box => box.value === 'FEATURE');
         const isPageChecked = checkboxes.some(box => box.value === 'PAGE');
+        const isTestDataChecked = checkboxes.some(box => box.value === 'TESTDATA');
+        const isTestScriptsChecked = checkboxes.some(box => box.value === 'TESTSCRIPTS');
 
         // Validate that at least one option is selected
-        if (!isFeatureChecked && !isPageChecked) {
+        if (!isFeatureChecked && !isPageChecked && !isTestDataChecked && !isTestScriptsChecked) {
             console.warn('No generation mode selected. Defaulting to Page Object generation.');
             // Default fallback to page object generation
             if (this.isJavaSelenium(lang, eng)) {
@@ -567,6 +581,33 @@ class ChatUI {
             } else if (this.isTypeScriptPlaywright(lang, eng)) {
                 promptKeys.push('PLAYWRIGHT_TS_PAGE_ONLY');
             }
+            return promptKeys;
+        }
+
+        // If only Test Data is checked, generate test data
+        if (isTestDataChecked && !isFeatureChecked && !isPageChecked && !isTestScriptsChecked) {
+            promptKeys.push('TEST_DATA_GENERATION');
+            return promptKeys;
+        }
+
+        // If Test Scripts is checked, generate page object first then test scripts
+        if (isTestScriptsChecked) {
+            // Always generate page object when test scripts is checked
+            if (this.isJavaSelenium(lang, eng)) {
+                promptKeys.push('SELENIUM_JAVA_PAGE_ONLY');
+                promptKeys.push('SELENIUM_JAVA_TEST_SCRIPTS');
+            } else if (this.isTypeScriptPlaywright(lang, eng)) {
+                promptKeys.push('PLAYWRIGHT_TS_PAGE_ONLY');
+                promptKeys.push('PLAYWRIGHT_TS_TEST_SCRIPTS');
+            } else {
+                this.addUnsupportedLanguageMessage(lang, eng);
+            }
+            
+            // If test data is also checked, add it
+            if (isTestDataChecked) {
+                promptKeys.push('TEST_DATA_GENERATION');
+            }
+            
             return promptKeys;
         }
 
@@ -598,6 +639,11 @@ class ChatUI {
             } else {
                 this.addUnsupportedLanguageMessage(lang, eng);
             }
+        }
+
+        // If test data is also checked along with feature/page, add it to the prompt keys
+        if (isTestDataChecked && (isFeatureChecked || isPageChecked)) {
+            promptKeys.push('TEST_DATA_GENERATION');
         }
 
         return promptKeys;
